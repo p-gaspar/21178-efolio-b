@@ -6,17 +6,58 @@
 */
 
 #include <stdio.h>
-#include "helpers.h";
-#include "../canvas/structs.h";
+#include <string.h>
+#include "helpers.h"
+#include "../_shared/helpers.h"
+#include "../_shared/vector.h"
+#include "../canvas/canvas.h"
+#include "../canvas/structs.h"
 
-Rectangle *parse_input(char input[]) {
-    FILE *input_file = fopen_wrapper(input, "r");
+/**
+ * Converte uma única linha de um ficheiro de entrada que obedeça ao formato
+ * x;y;c;a para uma struct Rectangle
+ */
+static Rectangle *parse_rectangle_line(char line[]) {
+    char *line_cpy = malloc_wrapper(strlen(line) + 1);
 
-    Rectangle *rectangles;
+    Rectangle *rect = malloc(sizeof(Rectangle));
 
-    char *line;
-    while (fgets_wrapper(line, ))
+    strcpy(line_cpy, line);
+    rect->x = string_to_int(get_csv_field(line_cpy, 1));
+
+    strcpy(line_cpy, line);
+    rect->y = string_to_int(get_csv_field(line_cpy, 2));
+
+    strcpy(line_cpy, line);
+    rect->width = string_to_int(get_csv_field(line_cpy, 3));
+
+    strcpy(line_cpy, line);
+    rect->height = string_to_int(get_csv_field(line_cpy, 4));
+
+    free(line_cpy);
+
+    return rect;
 }
 
-/* REMOVE THIS */
-extern int make_iso_compilers_happy;
+/** 
+ * Lê o ficheiro recebido no input, e por cada linha,
+ * preenche uma struct Rectangle. No fim é retornado um pointer para
+ * o conjunto de retângulos que foram retirados do ficheiro
+ */
+Vector *parse_file(char input[]) {
+    FILE *input_file = fopen_wrapper(input, "r");
+    char *line = malloc(sizeof(char *));
+
+    VECTOR_INITIALIZE_PTR(v_rectangles);
+
+    while (fgets_wrapper(line, 20, input_file)) {
+        Rectangle *rect = parse_rectangle_line(line);
+        *rect = canvas_normalize_coordinates(*rect);
+        
+        VECTOR_PUSH_PTR(v_rectangles, rect);
+    }
+
+    free(line);
+
+    return v_rectangles;
+}

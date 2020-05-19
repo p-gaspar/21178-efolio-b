@@ -7,6 +7,24 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <wchar.h>
+
+/**
+ * Verifica se um ficheiro existe ao tentar abri-lo.
+ * Se o ponteiro para o ficheiro não for null, sabemos que o ficheiro foi
+ * aberto com sucesso.
+ */
+int file_exists(char filename[]) {
+    FILE *file;
+
+    if ((file = fopen(filename, "r")) != NULL) {
+        fclose(file);
+        return 1;
+    } else {
+        return 0;
+    }
+}
 
 /**
  * Método que implementa "graceful degradation"
@@ -14,8 +32,7 @@
  * abrir o ficheiro, mostra uma mensagem de erro no ecrã
  * e aborta a execução do programa.
  */
-FILE *fopen_wrapper(char *filename, char *mode)
-{
+FILE *fopen_wrapper(char *filename, char *mode) {
     FILE *file = fopen(filename, mode);
 
     if (file == NULL) 
@@ -34,9 +51,8 @@ FILE *fopen_wrapper(char *filename, char *mode)
  * Os campos são 1-index (ou one-based), ou seja, o primeiro campo
  * tem o index 1
  */
-const char* get_csv_field(char* line, int index)
-{
-    const char* token;
+char* get_csv_field(char* line, int index) {
+    char* token;
     for (token = strtok(line, ";");
         token && *token; 
         token = strtok(NULL, ";\n"))
@@ -54,13 +70,12 @@ const char* get_csv_field(char* line, int index)
  * não é recomendada), o fgets inclui uma newline no final.
  * este método serve para retirar a newline do final da string.
  */
-char *fgets_wrapper(char *buffer, size_t buflen, FILE *fp)
-{
+char *fgets_wrapper(char *buffer, size_t buflen, FILE *fp) {
     if (fgets(buffer, buflen, fp) != 0)
     {
         buffer[strcspn(buffer, "\n")] = '\0';
         return buffer;
-    }
+    };
 
     return 0;
 }

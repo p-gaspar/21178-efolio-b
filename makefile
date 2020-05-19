@@ -9,4 +9,4 @@ CC = gcc
 CFLAGS = -Wall -Werror -ansi -pedantic
 
 efolio: 
-	gcc $(CFLAGS) -o ./output/efolio ./_shared/helpers.c ./canvas/canvas.c ./file-manager/file-manager.c ./file-manager/helpers.c ./ui/ui.c ./main.c 
+	gcc $(CFLAGS) -o ./output/efolio ./_shared/helpers.c ./_shared/vector.c ./canvas/canvas.c ./file-manager/file-manager.c ./file-manager/helpers.c ./ui/ui.c ./main.c 

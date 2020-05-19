@@ -8,6 +8,8 @@
 #ifndef __UI_H   /* Include guard */
 #define __UI_H
 
-void initialize();
+char *ui_request_filename();
+
+void ui_initialize();
 
 #endif

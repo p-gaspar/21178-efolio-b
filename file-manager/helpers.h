@@ -10,12 +10,17 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <wchar.h>
 
 /**
- * Método que implementa "graceful degradation"
- * ao utilizar a função fopen. Se ocorrer um erro ao
- * abrir o ficheiro, mostra uma mensagem de erro no ecrã
- * e aborta a execução do programa.
+ * Verifica se um ficheiro existe.
+ * Se existir retorna 1, caso contrário retorna 0.
+ */
+int file_exists(char filename[]);
+
+/**
+ * Implementação do fopen que, quando ocorre um erro ao abrir o ficheiro,
+ * é disparado um erro e a execução do programa é parada.
  */
 FILE *fopen_wrapper(char *filename, char *mode);
 
@@ -23,15 +28,12 @@ FILE *fopen_wrapper(char *filename, char *mode);
  * Adquire um campo de uma linha do ficheiro "CSV" (neste caso semi colon).
  * Os campos têm de estar separados por um ponto e vírgula (;).
  * Os campos são 1-index (ou one-based), ou seja, o primeiro campo
- * tem o index 1
+ * tem o index 1.
  */
-const char* get_csv_field(char* line, int index);
+char* get_csv_field(char* line, int index);
 
 /**
- * Este wrapper para a função fgets é utilizada
- * porque, ao contrário do gets (o qual a sua utilização
- * não é recomendada), o fgets inclui uma newline no final.
- * este método serve para retirar a newline do final da string.
+ * Implementação do fgets que remove a newline no final da string.
  */
 char *fgets_wrapper(char *buffer, size_t buflen, FILE *fp);
 

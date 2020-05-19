@@ -8,7 +8,13 @@
 #ifndef __SHARED_VECTOR_H   /* Include guard */
 #define __SHARED_VECTOR_H
 
-#include <stdio.h>
+#include "helpers.h"
+
+#define VECTOR_INITIALIZE(vector) Vector vector; vector_initialize(&vector);
+#define VECTOR_INITIALIZE_PTR(vector) Vector *vector = malloc_wrapper(sizeof(Vector)); vector_initialize(vector);
+#define VECTOR_PUSH(vector, item) vector_push(&vector, (void *) item);
+#define VECTOR_PUSH_PTR(vector, item) vector_push(vector, (void *) item);
+#define VECTOR_GET(vector, type, index) (type) vector_get(&vector, index);
 
 /** 
  * Simples implementação de um vetor. Em conjunção com os métodos da classe
@@ -32,13 +38,6 @@ typedef struct Vector {
  * @param vector Vetor a inicializar
 */
 void vector_initialize(Vector *vector);
-
-/** 
- * Altera a capacidade do vetor.
- * @param vector Vetor a alterar a capacidade
- * @param size Capacidade após o redimensionamento
- */
-static void vector_resize(Vector *vector, int size);
 
 /**
  * Adiciona um item a um vetor.

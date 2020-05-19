@@ -7,7 +7,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-
 #include "vector.h"
 
 /** 
@@ -19,7 +18,7 @@ void vector_initialize(Vector *vector)
 {
     vector->size = 2;
     vector->count = 0;
-    vector->items = malloc(sizeof(void *) * v->size);
+    vector->items = malloc(sizeof(void *) * vector->size);
 }
 
 /** 

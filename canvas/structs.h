@@ -12,6 +12,8 @@ typedef struct Canvas {
     int width;
 
     int height;
+
+    char **points;
 } Canvas;
 
 typedef struct Rectangle {
