@@ -11,8 +11,8 @@
 #include "structs.h"
 #include "../_shared/vector.h"
 
-#define CANVAS_DEFAULT_WIDTH 80
-#define CANVAS_DEFAULT_HEIGHT 25
+#define CANVAS_DEFAULT_WIDTH 30
+#define CANVAS_DEFAULT_HEIGHT 12    
 
 /** Carácter a utilizar em espaços não preenchidos por retângulos */
 #define CANVAS_WHITESPACE ' '
@@ -21,25 +21,25 @@
  * Carácter a utilizar nas arestas das bordas do plano:
  * (0, 0); (0, HEIGHT); (WIDTH, 0); (WIDTH; HEIGHT)
  */ 
-#define CANVAS_BORDER_CORNER '0'
+#define CANVAS_BORDER_CORNER_CHAR '0'
 
 /** Carácter a utilizar nas linhas (x=0 ou x=width) das bordas do plano */
-#define CANVAS_BORDER_ROW 'R'
+#define CANVAS_BORDER_ROW_CHAR  'R'
 
 /** Carácter a utilizar nas colunas (y=0 ou y=height) das bordas do plano */
-#define CANVAS_BORDER_COLUMN 'C'
+#define CANVAS_BORDER_COLUMN_CHAR  'C'
 
 /** Carácter a utilizar nas arestas dos retângulos */
-#define CANVAS_RECTANGLE_CORNER '+'
+#define CANVAS_RECTANGLE_CORNER_CHAR  '+'
 
 /** Carácter a utilizar nas linhas horizontais dos retângulos */
-#define CANVAS_RECTANGLE_ROW '-'
+#define CANVAS_RECTANGLE_ROW_CHAR  '-'
 
 /** Carácter a utilizar nas linhas verticais dos retângulos */
-#define CANVAS_RECTANGLE_COLUMN '|'
+#define CANVAS_RECTANGLE_COLUMN_CHAR  '|'
 
 /* Carácter a utilizar no espaço interior dos retângulos */
-#define CANVAS_RECTANGLE_INNER ' '
+#define CANVAS_RECTANGLE_INNER_CHAR ' '
 
 /**
  * Inicializa o canvas com valores por defeito
