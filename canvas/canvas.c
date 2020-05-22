@@ -36,6 +36,72 @@ static void __throw_uninitialized_error()
     exit(0);
 }
 
+/**
+ * Aloca espaço necessário para o plano ter (largura*altura) pontos.
+ * @param width Largura do plano (x)
+ * @param height Altura do plano (y)
+ */
+static void __canvas_alloc(int width, int height) {
+    int i;
+
+    canvas = malloc_wrapper(sizeof(Canvas));
+
+    canvas->width = width;
+    canvas->height = height;
+
+    /* 
+     * É iniciado o array dinâmico de duas dimensões. Basicamente,
+     * é alocado espaço em memória para cada um dos caracteres do nosso plano,
+     * que irá conter até (width * height) caracteres.
+     */
+    canvas->points = (char **)malloc_wrapper(sizeof(char *) * canvas->width);
+    for (i = 0; i < canvas->width; i++) {
+        /* Aqui é utilizado calloc porque é de suprema importância que os
+         * valores sejam inicializados a 0 (coisa que o malloc não faz).
+         * O programa sabe que um espaço está preenchido se o valor do ponteiro
+         * for vazio. No entanto, se for alocado espaço, libertado, e alocado
+         * de novo, o ponteiro pode ficar com valores de lixo. 
+         * Ao fazer calloc isto não acontece, pois é sempre inicializado a 0. */
+        canvas->points[i]
+            = (char *)calloc_wrapper(canvas->height, sizeof(char));
+    }
+
+}
+
+/**
+ * Liberta o espaço ocupado pelo plano e pelos seus pontos
+ */
+static void __canvas_dealloc() {
+    int i;
+
+    /* 
+     * Primeiro limpa-se os espaços alocados à segunda dimensão dos items do
+     * plano, depois à primeira, e finalmente ao próprio plano. Assim 
+     * garantimos que toda a memória alocada é libertada
+     */
+    for (i = 0; i < canvas->width; i++) free(canvas->points[i]);
+    free(canvas->points);
+    free(canvas);
+}
+
+/** 
+ * Altera as dimensões do plano.
+ * AVISO: Ao utilizar este método, todos os caracteres já presentes no plano
+ *        serão perdidos.
+ * @param width Nova largura do plano (x)
+ * @param height Nova altura do plano (y)
+ */
+static void __canvas_resize(int width, int height) {
+    if (!canvas_initialized) {
+        __throw_uninitialized_error();
+    }
+
+    printf("Canvas resize: Old sizes: w:%d, h:%d. New sizes: w:%d, h:%d\n", canvas->width, canvas->height, width, height);
+
+    __canvas_dealloc();
+    __canvas_alloc(width, height);
+}
+
 /** 
  * Verifica se o retângulo recebido intercepta a coordenada x,y recebida.
  * Apenas é considerado intercessão se o ponto estiver dentro do retângulo,
@@ -61,14 +127,19 @@ static int __point_in_use(Rectangle *rect, int x, int y) {
     return 0;
 }
 
-/** Verifica se um ponto x,y corresponde a um dos vértices de um retângulo */
-static int __is_corner_point(
-    int x, int y, int r_x, int r_y, int r_width, int r_height) 
+/** 
+ * Verifica se um ponto x,y corresponde a um dos vértices de um retângulo
+ * @param x Coordenada x do ponto a verificar
+ * @param y Coordenada y do ponto a verificar
+ * @param rectangle Retângulo a verificar
+ * */
+static int __is_corner_point(int x, int y, Rectangle *rectangle) 
 {
-    if ((x == r_x && y == r_y)
-        || (x == r_x && y == r_y + r_height - 1)
-        || (x == r_x + r_width - 1 && y == r_y)
-        || (x == r_x + r_width - 1 && y == r_y + r_height - 1))
+    if ((x == rectangle->x && y == rectangle->y)
+        || (x == rectangle->x && y == rectangle->y + rectangle->height - 1)
+        || (x == rectangle->x + rectangle->width - 1 && y == rectangle->y)
+        || (x == rectangle->x + rectangle->width - 1 
+            && y == rectangle->y + rectangle->height - 1))
     {
         return 1;
     } else {
@@ -76,37 +147,46 @@ static int __is_corner_point(
     }
 }
 
-static void __add_point(
-    int x, int y, int r_x, int r_y, int r_width, int r_height, int r_index) 
+/**
+ * Adiciona ao plano um carácter no ponto x,y com base no retângulo recebido
+ * @param x Coordenada x do ponto/carácter a adicionar
+ * @param y Coordenada x do ponto/carácter a adicionar
+ * @param rectangle Retângulo a verificar
+ * @param rect_index Índice atual do retângulo (para mostrar mensagem de erro,
+ *                   caso necessário)
+ */
+static void __add_point(int x, int y, Rectangle *rectangle, int rect_index) 
 {
-    if (__is_corner_point(x, y, r_x, r_y, r_width, r_height))
+    if (__is_corner_point(x, y, rectangle))
     {
         /* Vértices do retângulo */
         canvas->points[x][y] = CANVAS_RECTANGLE_CORNER_CHAR;
-    } else if (x == r_x || x == r_x + r_width - 1) {
+    } else if (x == rectangle->x || x == rectangle->x + rectangle->width - 1) {
         /* Arestas verticais do retângulo */
         if (canvas->points[x][y] != CANVAS_RECTANGLE_CORNER_CHAR) {
             canvas->points[x][y] = CANVAS_RECTANGLE_COLUMN_CHAR;
         }
-    } else if (y == r_y || y == r_y + r_height - 1) {
+    } else if (y == rectangle->y || y == rectangle->y + rectangle->height - 1){
         /* Arestas horizontais do retângulo */
         if (canvas->points[x][y] != CANVAS_RECTANGLE_CORNER_CHAR) {
             canvas->points[x][y] = CANVAS_RECTANGLE_ROW_CHAR;
         }
     } else {
         /* Espaço interior do retângulo. Se já estiver um carácter
-            * neste espaço, é lançado um erro pois significa que
-            * este espaço já está ocupado por outro retângulo */
+         * neste espaço, é lançado um erro pois significa que
+         * este espaço já está ocupado por outro retângulo */
 
         if (canvas->points[x][y] == (char)0) {
             canvas->points[x][y] = CANVAS_RECTANGLE_INNER_CHAR;
         } else {
+            printf("xy value: %c\n", canvas->points[x][y]);
+
             wprintf(ANSI_COLOR_RED L"ERRO:" ANSI_COLOR_RESET
                     " Ocorreu um erro ao introduzir um "
                     "retângulo no plano:\n"
                     "      O %dº retângulo sobrepõe espaço "
                     "já utilizado por outro(s) retângulo(s).\n", 
-                r_index + 1);
+                rect_index + 1);
             exit(0);
         }
     }
@@ -213,28 +293,45 @@ void __apply_gravity(Vector *rectangles) {
     } while (changes);
 }
 
+void __rotate_90deg(Vector *rectangles) {
+    int i;
+
+    if (!canvas_initialized)
+    {
+        __throw_uninitialized_error();
+    }
+
+    for (i = 0; i < rectangles->count; i++)
+    {
+        Rectangle *rect = (Rectangle *)(rectangles->items[i]);
+        int x = rect->x;
+        int width = rect->width;
+
+        rect->x = canvas->height - rect->y - rect->height + 1;
+        rect->y = x;
+
+        rect->width = rect->height;
+        rect->height = width;
+    }
+
+    __canvas_resize(canvas->height, canvas->width);
+}
+
 /**
  * Inicializa o canvas com valores por defeito
  */
 void canvas_initialize()
 {
-    int i;
-
-    canvas = malloc_wrapper(sizeof(Canvas));
-
-    canvas->width = CANVAS_DEFAULT_WIDTH;
-    canvas->height = CANVAS_DEFAULT_HEIGHT;
-
-    /* 
-     * É iniciado o array dinâmico de duas dimensões. Basicamente,
-     * é alocado espaço em memória para cada um dos caracteres do nosso plano,
-     * que irá conter até (width * height) caracteres.
-     */
-    canvas->points = (char **)malloc_wrapper(sizeof(char *) * canvas->width);
-    for (i = 0; i < canvas->width; i++) {
-        canvas->points[i]
-            = (char *)malloc_wrapper(sizeof(char) * canvas->height);
+    if (canvas_initialized) {
+        wprintf(ANSI_COLOR_RED L"ERRO:" ANSI_COLOR_RESET
+           " O plano já foi inicializado.\n"
+           "      Não é permitido voltar a inicializar o plano.\n");
+        
+        exit(0);
     }
+
+
+    __canvas_alloc(CANVAS_DEFAULT_WIDTH, CANVAS_DEFAULT_HEIGHT);
 
     canvas_initialized = 1;
 }
@@ -250,6 +347,11 @@ void canvas_insert(Vector *rectangles) {
         __throw_uninitialized_error();
     }
 
+    printf("Canvas insert: Applying gravity to received rectangles.\n");
+    __apply_gravity(rectangles);
+    printf("Canvas insert: Rotating rectangles.\n");
+    __rotate_90deg(rectangles);
+    printf("Canvas insert: Applying gravity to rotated rectangles.\n");
     __apply_gravity(rectangles);
 
     for (i = 0; i < rectangles->count; i++) {
@@ -276,8 +378,7 @@ void canvas_insert(Vector *rectangles) {
                     exit(0);
                 }
 
-                __add_point(
-                    x, y, rect->x, rect->y, rect->width, rect->height, i);
+                __add_point(x, y, rect, i);
             }
         }
     }
@@ -365,16 +466,6 @@ Vector *canvas_sort_rectangles(Vector *rectangles) {
  */
 void canvas_destroy()
 {
-    int i;
-
-    /* 
-     * Primeiro limpa-se os espaços alocados à segunda dimensão dos items do
-     * plano, depois à primeira, e finalmente ao próprio plano. Assim 
-     * garantimos que toda a memória alocada é libertada
-     */
-    for (i = 0; i < canvas->width; i++) free(canvas->points[i]);
-    free(canvas->points);
-    free(canvas);
-
+    __canvas_dealloc();
     canvas_initialized = 0;
 }

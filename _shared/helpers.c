@@ -33,6 +33,24 @@ void *malloc_wrapper(size_t size) {
 }
 
 /**
+ * Método que implementa "graceful degradation"
+ * ao utilizar a função calloc. Se ocorrer um erro
+ * ao alocar a memória, mostra uma mensagem no ecrã
+ * e aborta a execução do programa.
+ */
+void *calloc_wrapper(int count, size_t size) {
+    void *ptr = calloc(count, size);
+    if (ptr == NULL) {
+        wprintf(ANSI_COLOR_RED L"ERRO:" ANSI_COLOR_RESET
+               " Ocorreu um erro ao alocar memória.\n"
+               "      A execução do programa terminou.\n");
+        exit(0);
+    }
+
+    return ptr;
+}
+
+/**
  * Valida e converte uma string para um int.
  * Esta função faz tambem error handling e caso 
  * o valor recebido seja válido, é retornado o próprio número.
