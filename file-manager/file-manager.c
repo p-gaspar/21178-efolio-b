@@ -46,18 +46,19 @@ static Rectangle *parse_rectangle_line(char line[]) {
  */
 Vector *parse_file(char input[]) {
     FILE *input_file = fopen_wrapper(input, "r");
-    char *line = malloc(sizeof(char *));
+    char *line = malloc(sizeof(char) * 21);
 
     VECTOR_INITIALIZE_PTR(v_rectangles);
 
     while (fgets_wrapper(line, 20, input_file)) {
         Rectangle *rect = parse_rectangle_line(line);
-        *rect = canvas_normalize_coordinates(*rect);
+        canvas_normalize_coordinates(rect);
         
         VECTOR_PUSH_PTR(v_rectangles, rect);
     }
 
     free(line);
 
+    canvas_sort_rectangles(v_rectangles);
     return v_rectangles;
 }

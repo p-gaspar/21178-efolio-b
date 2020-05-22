@@ -10,6 +10,9 @@
 #include <string.h>
 #include <errno.h>
 #include <limits.h>
+#include "helpers.h"
+#include "vector.h"
+#include "../canvas/structs.h"
 
 /**
  * Método que implementa "graceful degradation"
@@ -20,7 +23,8 @@
 void *malloc_wrapper(size_t size) {
     void *ptr = malloc(size);
     if (ptr == NULL) {
-        printf("ERRO: Ocorreu um erro ao alocar memória.\n"
+        wprintf(ANSI_COLOR_RED L"ERRO:" ANSI_COLOR_RESET
+               " Ocorreu um erro ao alocar memória.\n"
                "      A execução do programa terminou.\n");
         exit(0);
     }

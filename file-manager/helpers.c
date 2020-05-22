@@ -9,6 +9,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <wchar.h>
+#include "../_shared/helpers.h"
 
 /**
  * Verifica se um ficheiro existe ao tentar abri-lo.
@@ -37,7 +38,8 @@ FILE *fopen_wrapper(char *filename, char *mode) {
 
     if (file == NULL) 
     { 
-        printf("ERRO: Não foi possível abrir o ficheiro %s.\n"
+        wprintf(ANSI_COLOR_RED L"ERRO:" ANSI_COLOR_RESET
+               " Não foi possível abrir o ficheiro %s.\n"
                "      A execução do programa terminou.\n", filename); 
         exit(0);
     } 

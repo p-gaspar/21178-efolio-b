@@ -58,6 +58,8 @@ void canvas_draw();
  * retângulo sejam o canto superior esquerdo, ao invés de serem o canto
  * inferior esquerdo.
  */ 
-Rectangle canvas_normalize_coordinates(Rectangle rectangle);
+void canvas_normalize_coordinates(Rectangle *rectangle);
+
+Vector *canvas_sort_rectangles(Vector *rectangles);
 
 #endif
