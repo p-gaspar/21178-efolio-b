@@ -208,12 +208,32 @@ int __compare_rectangles(const void *elem1, const void *elem2) {
 }
 
 /**
+ * Inicializa o canvas com valores por defeito
+ */
+void canvas_initialize()
+{
+    if (canvas_initialized) {
+        wprintf(ANSI_COLOR_RED L"ERRO:" ANSI_COLOR_RESET
+           " O plano já foi inicializado.\n"
+           "      Não é permitido voltar a inicializar o plano.\n");
+        
+        exit(0);
+    }
+
+
+    __canvas_alloc(CANVAS_DEFAULT_WIDTH, CANVAS_DEFAULT_HEIGHT);
+
+    canvas_initialized = 1;
+}
+
+
+/**
  * Aplica a gravidade a um vetor de retângulos com base nas definições do 
  * plano atual. Os retângulos deverão ser ordenados, desde o retângulo mais
  * a baixo para o retângulo mais a cima.
  * @param rectangles Vetor de retângulos a alterar
  */
-void __apply_gravity(Vector *rectangles) {
+void canvas_apply_gravity(Vector *rectangles) {
     /* Indica se ocorreu alguma alteração nas posições dos retângulos na
      * iteração atual. Caso não ocorram alterações numa iteração, signfica que 
      * os retângulos já estão todos nos sitios corretos.
@@ -293,7 +313,7 @@ void __apply_gravity(Vector *rectangles) {
     } while (changes);
 }
 
-void __rotate_90deg(Vector *rectangles) {
+void canvas_rotate_90deg(Vector *rectangles) {
     int i;
 
     if (!canvas_initialized)
@@ -317,25 +337,6 @@ void __rotate_90deg(Vector *rectangles) {
     __canvas_resize(canvas->height, canvas->width);
 }
 
-/**
- * Inicializa o canvas com valores por defeito
- */
-void canvas_initialize()
-{
-    if (canvas_initialized) {
-        wprintf(ANSI_COLOR_RED L"ERRO:" ANSI_COLOR_RESET
-           " O plano já foi inicializado.\n"
-           "      Não é permitido voltar a inicializar o plano.\n");
-        
-        exit(0);
-    }
-
-
-    __canvas_alloc(CANVAS_DEFAULT_WIDTH, CANVAS_DEFAULT_HEIGHT);
-
-    canvas_initialized = 1;
-}
-
 /** 
  * Insere um vetor de retângulos no plano 
  */
@@ -347,12 +348,12 @@ void canvas_insert(Vector *rectangles) {
         __throw_uninitialized_error();
     }
 
-    printf("Canvas insert: Applying gravity to received rectangles.\n");
+    /*printf("Canvas insert: Applying gravity to received rectangles.\n");
     __apply_gravity(rectangles);
     printf("Canvas insert: Rotating rectangles.\n");
     __rotate_90deg(rectangles);
     printf("Canvas insert: Applying gravity to rotated rectangles.\n");
-    __apply_gravity(rectangles);
+    __apply_gravity(rectangles);*/
 
     for (i = 0; i < rectangles->count; i++) {
         Rectangle *rect = (Rectangle *)(rectangles->items[i]);
@@ -381,6 +382,15 @@ void canvas_insert(Vector *rectangles) {
                 __add_point(x, y, rect, i);
             }
         }
+    }
+}
+
+void canvas_clear() {
+    int i;
+    for (i = 0; i < canvas->width; i++) {
+        free(canvas->points[i]);
+        canvas->points[i]
+            = (char *)calloc_wrapper(canvas->height, sizeof(char));
     }
 }
 

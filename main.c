@@ -38,12 +38,12 @@ int main(void) {
         );
     }
 
-    canvas_insert(v_rectangles);
-    canvas_draw();
+    ui_handle_canvas(v_rectangles);
 
     /* ***************************** */
 
     free(filename);
+    free(v_rectangles);
 
     return 1;
 }

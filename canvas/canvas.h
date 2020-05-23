@@ -46,10 +46,16 @@
  */
 void canvas_initialize();
 
+void canvas_apply_gravity(Vector *rectangles);
+
+void canvas_rotate_90deg(Vector *rectangles);
+
 /** 
  * Insere um vetor de retângulos no plano 
  */
 void canvas_insert(Vector *rectangles);
+
+void canvas_clear();
 
 void canvas_draw();
 
