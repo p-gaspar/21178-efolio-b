@@ -15,7 +15,6 @@
 #include "file-manager/file-manager.h"
 
 int main(void) {
-    int i;
     char *filename;
     Vector *v_rectangles;
 
@@ -26,22 +25,11 @@ int main(void) {
 
     v_rectangles = parse_file((filename = ui_request_filename()));
 
-    printf("rectangles count: %d\n", v_rectangles->count);
-
-    for (i = 0; i < v_rectangles->count; i++)
-    {
-        printf("x: %d, y: %d, w: %d, h: %d\n",
-            ((Rectangle *)(v_rectangles->items[i]))->x,
-            ((Rectangle *)(v_rectangles->items[i]))->y,
-            ((Rectangle *)(v_rectangles->items[i]))->width,
-            ((Rectangle *)(v_rectangles->items[i]))->height
-        );
-    }
-
-    ui_handle_canvas(v_rectangles);
+    ui_request_canvas_option(v_rectangles);
 
     /* ***************************** */
 
+    canvas_destroy();
     free(filename);
     free(v_rectangles);
 

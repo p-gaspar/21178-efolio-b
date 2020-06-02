@@ -15,7 +15,15 @@
 #include "../file-manager/helpers.h"
 #include "../canvas/canvas.h"
 
-const char __get_canvas_option() {
+/* ************************************************************************  */
+/* Métodos privados */
+
+/** 
+ * Pede ao utilizador a opção que pretende para manipular o plano, e
+ * retorna-a. Se o utilizador enviar uma opção inválida, continua a pedir até
+ * obter uma opção válida.
+ */
+static char __get_canvas_option() {
     char option = 0;
 
     wprintf(L"\nAção a executar:\n");
@@ -41,7 +49,12 @@ const char __get_canvas_option() {
     return option;
 }
 
-void clear_screen() {
+/** 
+ * Limpa o ecrã da consola.
+ * Nos sistemas *nix, utiliza o comando clear.
+ * Em Windows, utiliza o comando cls.
+ */
+static void __clear_screen() {
     #if defined(__linux__) || defined(__unix__) || defined(__APPLE__)
         system("clear");
     #endif
@@ -51,6 +64,15 @@ void clear_screen() {
     #endif
 }
 
+/* ************************************************************************  */
+/* Métodos públicos */
+
+/**
+ * Pede ao utilizador o nome do ficheiro a carregar.
+ * Se o utilizador introduzir um caminho para um ficheiro que não existe,
+ * continua a pedir até obter um caminho para um ficheiro válido e mostra uma
+ * mensagem de erro adequada.
+ */
 char *ui_request_filename() {
     char input[255];
     char *return_val;
@@ -84,7 +106,13 @@ char *ui_request_filename() {
     return return_val;
 }
 
-void ui_handle_canvas(Vector *rectangles) {
+/**
+ * Pede ao utilizador que opção pretende escolher para manipular o plano.
+ * Continua a pedir ao utilizador até que obtenha uma opção válida, ou até que
+ * escolha a opção para sair.
+ * @param rectangles Retângulos a manipular
+ */
+void ui_request_canvas_option(Vector *rectangles) {
     char option = 0;
 
     do {
@@ -104,6 +132,7 @@ void ui_handle_canvas(Vector *rectangles) {
             }
         }
 
+        ui_initialize();
         canvas_insert(rectangles);
         canvas_draw();
 
@@ -111,7 +140,10 @@ void ui_handle_canvas(Vector *rectangles) {
     } while (option != '0');
 }
 
+/** 
+ * Limpa o ecrã e mostra a mensagem de título.
+ */
 void ui_initialize() {
-    /* clear_screen(); */
+    __clear_screen();
     wprintf(L"E-Fólio B: Mundo dos retângulos ## 1902551 - Pedro Gaspar\n\n");
 }

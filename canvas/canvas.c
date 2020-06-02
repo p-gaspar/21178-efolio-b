@@ -22,6 +22,9 @@ static Canvas *canvas;
  */
 int canvas_initialized = 0;
 
+/* ************************************************************************  */
+/* Métodos privados */
+
 /**
  * Lança um erro que o canvas não foi inicializado e termina a execução
  * do programa.
@@ -96,8 +99,6 @@ static void __canvas_resize(int width, int height) {
         __throw_uninitialized_error();
     }
 
-    printf("Canvas resize: Old sizes: w:%d, h:%d. New sizes: w:%d, h:%d\n", canvas->width, canvas->height, width, height);
-
     __canvas_dealloc();
     __canvas_alloc(width, height);
 }
@@ -122,8 +123,6 @@ static int __point_in_use(Rectangle *rect, int x, int y) {
         }
     }
 
-    printf("Gravity/Point in use: Rectangle %d;%d;%d;%d does not use the point (%d, %d).\n", rect->x, rect->y, rect->width, rect->height, x, y);
-    
     return 0;
 }
 
@@ -179,8 +178,6 @@ static void __add_point(int x, int y, Rectangle *rectangle, int rect_index)
         if (canvas->points[x][y] == (char)0) {
             canvas->points[x][y] = CANVAS_RECTANGLE_INNER_CHAR;
         } else {
-            printf("xy value: %c\n", canvas->points[x][y]);
-
             wprintf(ANSI_COLOR_RED L"ERRO:" ANSI_COLOR_RESET
                     " Ocorreu um erro ao introduzir um "
                     "retângulo no plano:\n"
@@ -192,26 +189,13 @@ static void __add_point(int x, int y, Rectangle *rectangle, int rect_index)
     }
 }
 
-int __compare_rectangles(const void *elem1, const void *elem2) {
-    Rectangle rect1 = *((Rectangle *)elem1);
-    Rectangle rect2 = *((Rectangle *)elem1);
-
-    if (rect1.y + rect1.height - 1 > rect2.y + rect2.height - 1) {
-        return 1;
-    }
-
-    if (rect1.y + rect1.height - 1 < rect2.y + rect2.height - 1) {
-        return -1;
-    }
-
-    return 0;
-}
+/* ************************************************************************  */
+/* Métodos públicos */
 
 /**
  * Inicializa o canvas com valores por defeito
  */
-void canvas_initialize()
-{
+void canvas_initialize() {
     if (canvas_initialized) {
         wprintf(ANSI_COLOR_RED L"ERRO:" ANSI_COLOR_RESET
            " O plano já foi inicializado.\n"
@@ -226,7 +210,6 @@ void canvas_initialize()
     canvas_initialized = 1;
 }
 
-
 /**
  * Aplica a gravidade a um vetor de retângulos com base nas definições do 
  * plano atual. Os retângulos deverão ser ordenados, desde o retângulo mais
@@ -239,16 +222,17 @@ void canvas_apply_gravity(Vector *rectangles) {
      * os retângulos já estão todos nos sitios corretos.
      */
     int changes;
-    int i;
 
     if (!canvas_initialized)
     {
         __throw_uninitialized_error();
     }
 
-    printf("Gravity: Canvas settings => width: %d; height: %d\n", canvas->width, canvas->height);
-
     do {
+        int i;
+
+        /** Indica se ocorreu alguma alteração nas posições dos retângulos
+         * nesta iteração */
         changes = 0;
 
         for (i = 0; i < rectangles->count; i++) {
@@ -258,43 +242,28 @@ void canvas_apply_gravity(Vector *rectangles) {
             int target_x;
             int target_y = rect->y + rect->height;
 
-            printf("Gravity: Verifying rectangle %d;%d;%d;%d.\n", rect->x, rect->y, rect->width, rect->height);
-
             if (rect->y + rect->height - 1 == canvas->height - 1) {
                 /* Se o fundo do retângulo já estiver na base, não precisa
                  * de ser mexido */
-                printf("Gravity: Rectangle %d;%d;%d;%d is already at the bottom, skipping.\n", rect->x, rect->y, rect->width, rect->height);
                 continue;
             }
-
-            printf("Gravity: Rectangle %d;%d;%d;%d is not at the bottom, verifying if space below is available.\n", rect->x, rect->y, rect->width, rect->height);
 
             for (target_x = rect->x; target_x < rect->x + rect->width; target_x++)
             {
                 int k;
-                printf("Gravity: Rectangle %d;%d;%d;%d. Verifying if point (%d,%d) is free.\n", rect->x, rect->y, rect->width, rect->height, target_x, target_y);
                 for (k = 0; k < rectangles->count; k++)
                 {
                     Rectangle *rect2 = (Rectangle *)(rectangles->items[k]);
-                    int point_in_use;
-                    if (k == i) { 
+                    if (k == i) {
+                        /* Se o retângulo que estamos a ver se colide com o
+                         * ponto que pretendemos é igual ao retângulo que
+                         * estamos a querer movimentar, passa à frente. */
                         continue;
                     }
 
-                    printf("Gravity: Verifying if point (%d,%d) is in use by rectangle %d;%d;%d;%d.\n", target_x, target_y, rect2->x, rect2->y, rect2->width, rect2->height);
-                    point_in_use = __point_in_use(
-                        rect2, 
-                        target_x,
-                        target_y);
-
-                    if (point_in_use) {
-                        safe_to_move = 0;
-                    } else {
-                        safe_to_move = 1;
-                    }
+                    safe_to_move = !__point_in_use(rect2, target_x,target_y);
 
                     if (!safe_to_move) {
-                        printf("Gravity: Rectangle %d;%d;%d;%d cannot move lower because the point (%d,%d) is already in use.\n", rect->x, rect->y, rect->width, rect->height, target_x, target_y);
                         break;
                     }
                 }
@@ -305,7 +274,6 @@ void canvas_apply_gravity(Vector *rectangles) {
             }
             
             if (safe_to_move) {
-                printf("Gravity: Space below rectangle %d;%d;%d;%d is available. New coordinates: %d;%d;%d;%d.\n", rect->x, rect->y, rect->width, rect->height, rect->x, rect->y + 1, rect->width, rect->height);
                 rect->y++;
                 changes = 1;
             }
@@ -313,6 +281,11 @@ void canvas_apply_gravity(Vector *rectangles) {
     } while (changes);
 }
 
+/**
+ * Roda o plano 90 graus no sentido dos ponteiros do relógio, e roda também
+ * os retângulos recebidos.
+ * @param rectangles Retângulos a rodar 90 graus
+ */
 void canvas_rotate_90deg(Vector *rectangles) {
     int i;
 
@@ -324,9 +297,11 @@ void canvas_rotate_90deg(Vector *rectangles) {
     for (i = 0; i < rectangles->count; i++)
     {
         Rectangle *rect = (Rectangle *)(rectangles->items[i]);
+
         int x = rect->x;
         int width = rect->width;
 
+        /* O novo ponto x vai ser o canto inferior esquerdo do retângulo */
         rect->x = canvas->height - rect->y - rect->height + 1;
         rect->y = x;
 
@@ -348,18 +323,8 @@ void canvas_insert(Vector *rectangles) {
         __throw_uninitialized_error();
     }
 
-    /*printf("Canvas insert: Applying gravity to received rectangles.\n");
-    __apply_gravity(rectangles);
-    printf("Canvas insert: Rotating rectangles.\n");
-    __rotate_90deg(rectangles);
-    printf("Canvas insert: Applying gravity to rotated rectangles.\n");
-    __apply_gravity(rectangles);*/
-
     for (i = 0; i < rectangles->count; i++) {
         Rectangle *rect = (Rectangle *)(rectangles->items[i]);
-
-        printf("Adding rectangle %d;%d;%d;%d to canvas.\n",
-            rect->x, rect->y, rect->width, rect->height);
 
         for (x = rect->x; x < rect->x + rect->width; x++) {
             for (y = rect->y; y < rect->y + rect->height; y++) {
@@ -385,8 +350,17 @@ void canvas_insert(Vector *rectangles) {
     }
 }
 
+/**
+ * Limpa os valores dos pontos já guardados no plano.
+ */
 void canvas_clear() {
     int i;
+
+    if (!canvas_initialized)
+    {
+        __throw_uninitialized_error();
+    }
+
     for (i = 0; i < canvas->width; i++) {
         free(canvas->points[i]);
         canvas->points[i]
@@ -394,8 +368,16 @@ void canvas_clear() {
     }
 }
 
+/**
+ * Desenha na consola os valores guardados no plano.
+ */
 void canvas_draw() {
     int x, y;
+
+    if (!canvas_initialized)
+    {
+        __throw_uninitialized_error();
+    }
 
     printf("\n");
 
@@ -407,26 +389,26 @@ void canvas_draw() {
                 /* Cantos do plano */
 
                 if (x == 0) { /* DEBUGGING */
-                    wprintf(L"%3d ", y);
+                    wprintf(ANSI_COLOR_CYAN L"%3d " ANSI_COLOR_RESET, y);
                 }
 
-                wprintf(L"%c", CANVAS_BORDER_CORNER_CHAR);
+                wprintf(ANSI_COLOR_GREEN L"%c" ANSI_COLOR_RESET, CANVAS_BORDER_CORNER_CHAR);
             } else if (x == 0 || x == canvas->width) {
                 /* Bordas horizontais do plano */
 
                 if (x == 0) { /* DEBUGGING */
-                    wprintf(L"%3d ", y);
+                    wprintf(ANSI_COLOR_CYAN L"%3d " ANSI_COLOR_RESET, y);
                 }
 
-                wprintf(L"%c", CANVAS_BORDER_ROW_CHAR);
+                wprintf(ANSI_COLOR_GREEN L"%c" ANSI_COLOR_RESET, CANVAS_BORDER_ROW_CHAR);
             } else if (y == 0 || y == canvas->height) {
                 /* Bordas verticais do plano */
 
-                wprintf(L"%c", CANVAS_BORDER_COLUMN_CHAR);
+                wprintf(ANSI_COLOR_GREEN L"%c" ANSI_COLOR_RESET, CANVAS_BORDER_COLUMN_CHAR);
             } else if (canvas->points[x][y] == (char)0) {
                 /* Espaço vazio do plano */
 
-                wprintf(L"%c", CANVAS_WHITESPACE);
+                wprintf(ANSI_COLOR_MAGENTA L"%c" ANSI_COLOR_RESET, CANVAS_WHITESPACE);
             } else {
                 /* Espaço ocupado do plano */
                 
@@ -459,16 +441,6 @@ void canvas_normalize_coordinates(Rectangle *rectangle) {
      * altura. A coordenada x mantém-se inalterada.
      */
     rectangle->y = canvas->height - rectangle->y - rectangle->height + 1;
-}
-
-Vector *canvas_sort_rectangles(Vector *rectangles) {
-    /*qsort(
-        *(rectangles->items),
-        rectangles->count,
-        sizeof(Rectangle *),
-        __compare_rectangles);*/
-
-    return rectangles;
 }
 
 /** 

@@ -51,14 +51,13 @@ Vector *parse_file(char input[]) {
     VECTOR_INITIALIZE_PTR(v_rectangles);
 
     while (fgets_wrapper(line, 20, input_file)) {
-        Rectangle *rect = parse_rectangle_line(line);
-        canvas_normalize_coordinates(rect);
+        Rectangle *rectangle = parse_rectangle_line(line);
+        canvas_normalize_coordinates(rectangle);
         
-        VECTOR_PUSH_PTR(v_rectangles, rect);
+        VECTOR_PUSH_PTR(v_rectangles, rectangle);
     }
 
     free(line);
 
-    canvas_sort_rectangles(v_rectangles);
     return v_rectangles;
 }
